@@ -1,0 +1,12 @@
+services:
+
+  wi-dev-container:
+    container_name: wi-dev-container
+    image: golang:1.22
+    volumes:
+      - ../:/workspace:cached
+    command: sleep infinity
+    environment:
+      - PORT=80
+    ports:
+      - "8080:80"

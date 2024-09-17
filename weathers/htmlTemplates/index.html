@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Info</title>
+    <style>
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 900px;
+            width: 100%;
+            height: 90vh;
+        }
+
+        .weather-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        /* Input and button styles */
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        textarea[disabled] {
+            background-color: #f9f9f9;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .weather-info {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            box-sizing: border-box;
+            min-height: 50px;
+            max-height: calc(90vh - 160px);
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+
+        .weather-info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .weather-info-item div {
+            flex: 1;
+            text-align: center;
+        }
+
+        .weather-info-location-header{
+            text-align: center;
+            text-underline-position: under;
+            font-size: larger;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="weather-section" id="query-weather">
+        <h2>Fetch a Weather Info</h2>
+        <input id="locationName" placeholder="Location Name" type="text"><br>
+        <button onclick="queryWeather()">Fetch</button>
+    </div>
+
+    <div class="weather-info" id="weatherInfoContainer">
+    </div>
+</div>
+</body>
+
+<script>
+
+    const weatherInfoNotExist = "Weather Info Not Exist";
+
+    window.onload = function () {
+        const weatherInfoContainer = document.getElementById('weatherInfoContainer');
+        appendTextContentIntoElement(weatherInfoContainer, weatherInfoNotExist);
+
+        const locationNameInputElement = document.getElementById('locationName');
+        locationNameInputElement.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                queryWeather();
+            }
+        });
+    }
+
+    function appendTextContentIntoElement(element, text) {
+        const weatherInfoTextContentDivElement = document.createElement('div');
+        weatherInfoTextContentDivElement.style.textAlign = 'center';
+        weatherInfoTextContentDivElement.textContent = text;
+
+        element.appendChild(weatherInfoTextContentDivElement);
+    }
+
+    function queryWeather() {
+        const locationNameInputElement = document.getElementById('locationName');
+        const weatherInfoContainer = document.getElementById('weatherInfoContainer');
+
+        const locationName = locationNameInputElement.value;
+
+        fetch(`/api/${locationName}/weathers`, {
+            method: 'GET'
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    return response.json().then(errorData => {
+                        const errorMessage = errorData.errorMessage || 'Unexpected error';
+                        throw new Error(errorMessage);
+                    });
+                }
+            })
+            .then(data => {
+                weatherInfoContainer.innerHTML = '';
+
+                let location = data.Location;
+                let weatherInfoCollection = data.WeatherInfoCollection;
+                if (weatherInfoCollection == undefined || weatherInfoCollection == null) {
+                    weatherInfoCollection = []
+                }
+
+                const locationInfoDiv = document.createElement('div');
+                locationInfoDiv.classList.add('weather-info-location-header');
+                locationInfoDiv.textContent = location;
+
+                const weatherInfoItems = weatherInfoCollection.map(info => {
+                    const timeElement = document.createElement('div');
+                    timeElement.textContent = info.Time;
+
+                    const temperatureElement = document.createElement('div');
+                    temperatureElement.textContent = `${info.Temperature.toFixed(2)}°C`;
+
+                    const weatherElement = document.createElement('div');
+                    weatherElement.textContent = info.Weather;
+
+                    const weatherInfoItem = document.createElement('div');
+                    weatherInfoItem.classList.add('weather-info-item');
+                    weatherInfoItem.appendChild(timeElement);
+                    weatherInfoItem.appendChild(temperatureElement);
+                    weatherInfoItem.appendChild(weatherElement);
+
+                    return weatherInfoItem;
+                });
+
+                if (weatherInfoItems.length === 0) {
+                    appendTextContentIntoElement(weatherInfoContainer, weatherInfoNotExist);
+                } else {
+                    weatherInfoContainer.append(locationInfoDiv);
+                    weatherInfoContainer.append(...weatherInfoItems);
+                }
+            })
+            .catch(error => {
+                weatherInfoContainer.innerHTML = '';
+                appendTextContentIntoElement(weatherInfoContainer, error.message);
+            });
+    }
+</script>
+
+</html>

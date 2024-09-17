@@ -1,0 +1,13 @@
+{
+  "name": "WeatherInfoDevContainer",
+  "dockerComposeFile": [
+    "docker-compose.yml"
+  ],
+  "service": "wi-dev-container",
+  "workspaceFolder": "/workspace",
+  "customizations" : {
+    "jetbrains" : {
+      "backend" : "GoLand"
+    }
+  }
+}
