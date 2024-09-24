@@ -4,9 +4,12 @@ services:
     container_name: wi-dev-container
     image: golang:1.22
     volumes:
-      - ../:/workspace:cached
+      - ../:/workspace
     command: sleep infinity
     environment:
       - PORT=80
+      - GOROOT=/usr/local/go
+      - GOPATH=/go
+      - GO111MODULE=on      
     ports:
       - "8080:80"
